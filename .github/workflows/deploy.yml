@@ -1,0 +1,40 @@
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  code-safety:
+    uses: ./.github/workflows/code_safety.yml
+
+  push-to-registry:
+    needs: code-safety
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/bu0263/python-cicd-kata-eduard:latest
+            ghcr.io/bu0263/python-cicd-kata-eduard:${{ github.sha }}
+  deploy:
+    needs: push-to-registry
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl --fail -sS --get
+               --data-urlencode "imgURL=$IMG" "$HOOK"
+      - name: Enlace
+        run: echo "[Abrir la app](${{vars.RENDER_URL}})"
+               >> $GITHUB_STEP_SUMMARY
+
