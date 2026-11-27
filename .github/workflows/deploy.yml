@@ -32,10 +32,18 @@ jobs:
     needs: push-to-registry
     runs-on: ubuntu-latest
     environment: production
-    steps:
-      - run: curl --fail -sS --get
-               --data-urlencode "imgURL=$IMG" "$HOOK"
-      - name: Enlace
-        run: echo "[Abrir la app](${{vars.RENDER_URL}})"
-               >> $GITHUB_STEP_SUMMARY
 
+    env:
+      IMG: ghcr.io/bu0263/python-cicd-kata-eduard:${{ github.sha }}
+      HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+    steps:
+      - name: Deploy
+        run: |
+          curl --fail -sS --get \
+            --data-urlencode "imgURL=$IMG" \
+            "$HOOK"
+
+      - name: Enlace
+        run: |
+          echo "[Abrir la app](${{ vars.RENDER_URL }})" >> "$GITHUB_STEP_SUMMARY"
