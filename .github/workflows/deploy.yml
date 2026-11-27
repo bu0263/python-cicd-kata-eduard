@@ -31,6 +31,7 @@ jobs:
   deploy:
     needs: push-to-registry
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - run: curl --fail -sS --get
                --data-urlencode "imgURL=$IMG" "$HOOK"
